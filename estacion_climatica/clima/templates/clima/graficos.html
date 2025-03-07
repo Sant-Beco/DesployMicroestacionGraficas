@@ -1,0 +1,178 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Micro Estación Meteorológica 🌿</title>
+    <link rel="stylesheet" href="{% static 'css/graficos.css' %}">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <link rel="icon" type="image/png" href="{% static 'img/iconodos.jpg' %}">
+    
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            background-color: #F8F9FA; /* Fondo suave */
+            color: #212529;
+        }
+        
+        .titulo {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 36px;
+            font-weight: bold;
+            color: #4B0082; /* Morado intenso para destacar */
+            padding: 20px;
+            background: linear-gradient(135deg, #264653, #264653);
+            border-radius: 15px;
+            box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .titulo i {
+            font-size: 50px;
+            margin-right: 10px;
+            color: #FFF;
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin: 0;
+            color: white;
+        }
+        
+        .filter-form {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            background: #f8f9fa;
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        select {
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+        
+        .filter-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .filter-button:hover {
+            background: #0056b3;
+        }
+        
+    </style>
+</head>
+<body>
+    <header class="titulo">
+        <i class="fas fa-cloud-sun-rain"></i> 
+        <h1>Microestación Meteorológica: Análisis Climático 📊</h1>
+    </header>
+
+    <form method="GET" onsubmit="return validateForm()" class="filter-form">
+        <div class="filter-group">
+            <label for="year">📅 Año:</label>
+            <select name="year" id="year" onchange="actualizarMeses()">
+                <option value="">Todos</option>
+                {% for y in años_únicos %}
+                    <option value="{{ y }}" {% if year_selected == y %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    
+        <div class="filter-group">
+            <label for="month">📆 Mes:</label>
+            <select name="month" id="month">
+                <option value="">Todos</option>
+                {% for m in meses_únicos %}
+                    <option value="{{ m }}" {% if month_selected == m %}selected{% endif %}>{{ m }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    
+        <button type="submit" class="filter-button">🔍 Filtrar</button>
+    </form>
+
+    {% if mensaje %}
+        <p>{{ mensaje }}</p>
+    {% else %}
+        <h2>Temperatura 🌡️ </h2>
+        {{ temperatura|safe }}
+
+        <h2>Humedad  💦</h2>
+        {{ humedad|safe }}
+
+        <h2>Luz  ☀️ </h2>
+        {{ luz|safe }}
+
+        <h2>Presión Atmosférica 🌧️</h2>
+        {{ presion|safe }}
+    {% endif %}
+
+    <script>
+        function validateForm() {
+            const year = document.getElementById("year").value;
+            const month = document.getElementById("month").value;
+
+            if (year && (isNaN(year) || year <= 0)) {
+                alert("Por favor, selecciona un año válido.");
+                return false;
+            }
+
+            if (month && (isNaN(month) || month < 1 || month > 12)) {
+                alert("Por favor, selecciona un mes válido.");
+                return false;
+            }
+
+            return true;
+        }
+
+        function actualizarMeses() {
+            const year = document.getElementById("year").value;
+            const monthSelect = document.getElementById("month");
+
+            // Limpiar opciones actuales
+            monthSelect.innerHTML = '<option value="">Todos</option>';
+
+            if (year) {
+                // Hacer una solicitud AJAX para obtener los meses del año seleccionado
+                fetch(`/obtener-meses/?year=${year}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.meses.forEach(mes => {
+                            const option = document.createElement("option");
+                            option.value = mes;
+                            option.text = mes;
+                            monthSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error("Error al obtener los meses:", error));
+            }
+        }
+    </script>
+</body>
+</html>
